@@ -1,25 +1,18 @@
 # fundraiser-contracts
 
-Fabric Token Launch Ethereum Smart Contracts
+Fabric Token Launch Ethereum smart contracts.
 
----
-
-## Mainnet addresses:
+## Mainnet address:
 
 Will be announced 2 days before FT launch.
 
----
-
 # Testing
 
-See [test](test) for details.
-
----
+Run `yarn test`
 
 # Deployment Checklist
 
 * Change FT safe accounts for core team and advisors.
-* Check Solidity [release history](https://github.com/ethereum/solidity/releases) for potential bugs. 
-* Set token conversion rate according to the most recent ETH/EUR exchange rate.
+* Change FT conversion rate right before fundraiser begins.
 * Deploy contract to Mainnet.
-* Verify the source code on EtherScan.io.
+* Verify the source code on Etherscan.

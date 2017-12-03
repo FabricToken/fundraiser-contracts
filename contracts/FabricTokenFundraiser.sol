@@ -164,7 +164,7 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
         balances[address(fabricTokenSafe)] = balances[address(fabricTokenSafe)].plus(totalTokensLocked);
         totalSupply = totalSupply.plus(totalTokensLocked);
 
-        // Transfer the funds for the bounty program
+        // Transfer the funds for the bounty program.
         balances[owner] = balances[owner].plus(TOKENS_BOUNTY_PROGRAM);
         totalSupply = totalSupply.plus(TOKENS_BOUNTY_PROGRAM);
 

@@ -1,9 +1,10 @@
 {
   "name": "fabric-token-contracts",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Fabric Token Smart Contracts",
   "scripts": {
-    "test": "truffle test",
+    "test": "bash ./bin/run-tests.sh",
+    "coverage": "bash ./bin/run-coverage.sh",
     "console": "truffle console"
   },
   "author": "Niquid Tech",

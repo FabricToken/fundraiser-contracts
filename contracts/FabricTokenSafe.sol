@@ -11,6 +11,8 @@ import "./traits/TokenSafe.sol";
  * @dev The Fabric Token safe containing all details about locked tokens.
  */
 contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
+    /// TODO: Change account addresses for core team and advisors.
+
     // Bundle type constants
     uint8 constant CORE_TEAM = 0;
     uint8 constant ADVISORS = 1;
@@ -25,7 +27,7 @@ contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
     {
         token = ERC20TokenInterface(_token);
 
-        /// Core team
+        /// Core team.
         initBundle(CORE_TEAM,
             TOKENS_LOCKED_CORE_TEAM_RELEASE_DATE
         );
@@ -35,10 +37,10 @@ contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
         addLockedAccount(CORE_TEAM, 0xce42bdB34189a93c55De250E011c68FaeE374Dd3, 4 * (10**6) * DECIMALS_FACTOR);
         addLockedAccount(CORE_TEAM, 0x97A3FC5Ee46852C1Cf92A97B7BaD42F2622267cC, 4 * (10**6) * DECIMALS_FACTOR);
 
-        // Verify that the tokens add up to the constant in the configuration
+        // Verify that the tokens add up to the constant in the configuration.
         assert(bundles[CORE_TEAM].lockedTokens == TOKENS_LOCKED_CORE_TEAM);
 
-        /// Advisors
+        /// Advisors.
         initBundle(ADVISORS,
             TOKENS_LOCKED_ADVISORS_RELEASE_DATE
         );
@@ -50,7 +52,7 @@ contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
         addLockedAccount(ADVISORS, 0xCc036143C68A7A9a41558Eae739B428eCDe5EF66, 1 * (10**6) * DECIMALS_FACTOR);
         addLockedAccount(ADVISORS, 0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42, 1 * (10**6) * DECIMALS_FACTOR);
 
-        // Verify that the tokens add up to the constant in the configuration
+        // Verify that the tokens add up to the constant in the configuration.
         assert(bundles[ADVISORS].lockedTokens == TOKENS_LOCKED_ADVISORS);
     }
 

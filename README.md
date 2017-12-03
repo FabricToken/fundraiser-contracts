@@ -1,4 +1,5 @@
 # fundraiser-contracts
+[![Build Status](https://travis-ci.org/FabricToken/fundraiser-contracts.svg?branch=master)](https://travis-ci.org/FabricToken/fundraiser-contracts)
 
 Fabric Token Launch Ethereum smart contracts.
 

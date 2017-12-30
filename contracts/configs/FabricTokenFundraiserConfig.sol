@@ -15,11 +15,11 @@ contract FabricTokenFundraiserConfig is FabricTokenConfig {
     // The hard cap of the fundraiser.
     uint constant TOKENS_HARD_CAP = 80 * (10**6) * DECIMALS_FACTOR;
 
-    // The start date of the fundraiser: Thursday, 12/21/2017 10:00:00 UTC.
-    uint constant START_DATE = 1513850400;
+    // The start date of the fundraiser: Thursday, 2018-02-15 10:00:00 UTC.
+    uint constant START_DATE = 1518688800;
 
-    // The end date of the fundraiser: Saturday, 02/04/2018 10:00:00 UTC (45 days after `START_DATE`).
-    uint constant END_DATE = 1517738400;
+    // The end date of the fundraiser: Sunday, 2018-04-01 10:00:00 UTC (45 days after `START_DATE`).
+    uint constant END_DATE = 1522576800;
     
     // Total number of tokens locked for the FT core team.
     uint constant TOKENS_LOCKED_CORE_TEAM = 12 * (10**6) * DECIMALS_FACTOR;

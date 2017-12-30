@@ -1,7 +1,8 @@
 #!/bin/bash
 
-source $(dirname $0)/common.sh
-source $(dirname $0)/ganache-config
+BIN_DIR=$(dirname $0)
+source $BIN_DIR/common.sh
+source $BIN_DIR/ganache-config
 cleanup
 
 # Definitions
@@ -13,6 +14,11 @@ TRUFFLE_CMD="./node_modules/.bin/truffle"
 # Setup
 $GANACHE_CMD > $GANACHE_LOG & echo $! >> var/run/testrpc.pid
 sleep 1
+
+# Replace the real addresses when testing address
+if [ "$CI" == "true" ]; then
+    $BIN_DIR/replace-with-test-addresses.sh
+fi
 
 # Testing
 $TRUFFLE_CMD test "$@"

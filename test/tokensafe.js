@@ -128,10 +128,11 @@ contract('TokenSafe', function (accounts) {
 
         let advisorsAccounts = [
             ["0xB9dcBf8A52Edc0C8DD9983fCc1d97b1F5d975Ed7", new BigNumber(2).mul(millionFactor).mul(decimalsFactor)],
-            ["0x26064a2E2b568D9A6D01B93D039D1da9Cf2A58CD", new BigNumber(2).mul(millionFactor).mul(decimalsFactor)],
+            ["0x26064a2E2b568D9A6D01B93D039D1da9Cf2A58CD", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
             ["0xe84Da28128a48Dd5585d1aBB1ba67276FdD70776", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
             ["0xCc036143C68A7A9a41558Eae739B428eCDe5EF66", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
             ["0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+            ["0x5D82c01e0476a0cE11C56b1711FeFf2d80CbB8B6", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
         ];
 
 

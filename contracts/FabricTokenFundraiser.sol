@@ -168,7 +168,6 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
         balances[owner] = balances[owner].plus(TOKENS_BOUNTY_PROGRAM);
         totalSupply = totalSupply.plus(TOKENS_BOUNTY_PROGRAM);
 
-
         /// Finalize the fundraiser. Keep in mind that this cannot be undone.
         finalized = true;
     }

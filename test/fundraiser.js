@@ -95,8 +95,8 @@ contract('Fundraiser', function (accounts) {
             await expectThrow(token.send(10));
         });
 
-        it('should not allow anyone to create tokens by sending ether to #buyTokensAs()', async function () {
-            await expectThrow(token.buyTokensAs(accounts[0], { value: 10 }));
+        it('should not allow anyone to create tokens by sending ether to #buyTokens()', async function () {
+            await expectThrow(token.buyTokens({ value: 10 }));
         });
 
         it('should not allow to finalize the fundraiser', async function () {
@@ -157,8 +157,8 @@ contract('Fundraiser', function (accounts) {
             let result = await token.send(ethersHardCap);
             await expectThrow(token.send(1));
             await expectThrow(token.sendTransaction({ value: 1, from: accounts[1] }));
-            await expectThrow(token.buyTokensAs(accounts[0], { value: 1, from: accounts[0] }));
-            await expectThrow(token.buyTokensAs(accounts[2], { value: 1, from: accounts[1] }));
+            await expectThrow(token.buyTokens({ value: 1, from: accounts[0] }));
+            await expectThrow(token.buyTokens({ value: 1, from: accounts[1] }));
         });
 
         it('should allow to finalize the fundraiser if the hardcap is reached, but it is not the owner', async function () {
@@ -196,14 +196,14 @@ contract('Fundraiser', function (accounts) {
             await assert_funds(accounts[0], 10, result.logs);
         });
 
-        it('should allow to create tokens by sending ether to #buyTokensAs()', async function () {
-            let result = await token.buyTokensAs(accounts[0], { value: 10 });
+        it('should allow to create tokens by sending ether to #buyTokens()', async function () {
+            let result = await token.buyTokens({ value: 10 });
             let balance = await token.balanceOf.call(accounts[0]);
             await assert_funds(accounts[0], 10, result.logs);
         });
 
-        it('should allow anyone to buy tokens as anyone else using #buyTokensAs()', async function () {
-            let result = await token.buyTokensAs(accounts[2], { value: 2, from: accounts[1] });
+        it('should allow anyone to buy tokens as anyone else using #buyTokens()', async function () {
+            let result = await token.buyTokens({ value: 2, from: accounts[2] });
             let balance = await token.balanceOf.call(accounts[2]);
             await assert_funds(accounts[2], 2, result.logs);
         });
@@ -217,8 +217,7 @@ contract('Fundraiser', function (accounts) {
         it('should not allow zero ether transactions', async function () {
             await expectThrow(token.send(0));
             await expectThrow(token.sendTransaction({ value: 0, from: accounts[1] }));
-            await expectThrow(token.buyTokensAs(accounts[0], { value: 0, from: accounts[0] }));
-            await expectThrow(token.buyTokensAs(accounts[0], { value: 0, from: accounts[1] }));
+            await expectThrow(token.buyTokens({ value: 0, from: accounts[0] }));
         });
     });
 

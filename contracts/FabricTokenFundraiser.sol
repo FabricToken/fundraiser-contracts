@@ -115,31 +115,32 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
      * @dev The default function which will fire every time someone sends ethers to this contract's address.
      */
     function() public payable {
-        buyTokensAs(msg.sender);
+        buyTokens();
     }
 
     /**
      * @dev Creates new tokens based on the number of ethers sent and the conversion rate.
-     *
-     * @param _address The address of the buyer.
      */
-    function buyTokensAs(address _address) public payable {
+    function buyTokens() public payable {
         require(!finalized);
         require(now >= startDate);
         require(now <= endDate);
         require(msg.value > 0);
         require(totalSupply <= hardCap);
 
+	/// Set the address of the buyer to the msg.sender
+        address buyer = msg.sender;
+
         /// Calculate the number of tokens the buyer will receive.
         uint tokens = msg.value.mul(conversionRate);
 
-        balances[_address] = balances[_address].plus(tokens);
+        balances[buyer] = balances[buyer].plus(tokens);
         totalSupply = totalSupply.plus(tokens);
 
-        Transfer(0x0, _address, tokens);
+        Transfer(0x0, buyer, tokens);
 
         FundsReceived(
-            _address, 
+            buyer, 
             msg.value, 
             tokens, 
             totalSupply, 

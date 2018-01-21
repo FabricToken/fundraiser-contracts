@@ -10,7 +10,7 @@ contract('FabricToken [HasOwner()]', function (accounts) {
         token = await FabricToken.new();
     });
 
-    it("should have owner", async function () {
+    it("should have an owner", async function () {
         const originalOwner = accounts[0];
         let owner = await token.owner();
         assert.equal(owner, originalOwner, "contract owner should be the first account");

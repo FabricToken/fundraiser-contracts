@@ -75,12 +75,18 @@ contract('Fundraiser', function (accounts) {
         });
 
         it('should allow to change conversion rate by the owner', async function () {
-            let result = await token.setConversionRate(1000)
-            assert.equal(result.logs.length, 1)
+            let result = await token.setConversionRate(1000);
+            assert.equal(result.logs.length, 1);
             assert.equal(result.logs[0].event, 'ConversionRateChange');
             assert.equal(result.logs[0].args._conversionRate, 1000);
             let conversionRate = await token.conversionRate.call();
             assert.equal(conversionRate, 1000)
+        });
+
+        it('should allow to whitelist entries', async function () {
+            await token.whitelistAddresses([accounts[1], accounts[2]]);
+            assert.equal(await token.whitelist.call(accounts[1]), true);
+            assert.equal(await token.whitelist.call(accounts[2]), true);
         });
 
         it('should not allow to change conversion rate to zero', async function () {
@@ -107,6 +113,7 @@ contract('Fundraiser', function (accounts) {
     describe('during the fundraiser', function () {
         beforeEach(async function () {
             token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            await token.whitelistAddresses([accounts[0], accounts[1], accounts[2]]);
         });
 
         it('should not allow owner to change conversion rate', async function () {
@@ -131,22 +138,24 @@ contract('Fundraiser', function (accounts) {
 
         it('should transfer the correct amount of ether to the beneficiary', async function () {
             token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            await token.whitelistAddresses([accounts[1]]);
 
             let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
             let result = await token.sendTransaction({ value: ethersHardCap, from: accounts[1] });
             let initialBeneficiaryBalance = web3.eth.getBalance(accounts[9]);
-            await token.finalize();
+            await token.finalize(); // Finalize based on hard cap
             let beneficiaryBalance = web3.eth.getBalance(accounts[9]);
             beneficiaryBalance.minus(initialBeneficiaryBalance).should.be.bignumber.equal(ethersHardCap);
         });
 
         it('should transfer the correct amount of tokens for the bounty program to the owner', async function () {
             token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            await token.whitelistAddresses([accounts[1]]);
 
             let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
             let result = await token.sendTransaction({ value: ethersHardCap, from: accounts[1] });
             let initialBeneficiaryBalance = web3.eth.getBalance(accounts[9]);
-            await token.finalize();
+            await token.finalize(); // Finalize based on hard cap
             let ownerTokensBalance = await token.balanceOf.call(accounts[0]);
             let expectedBountyTokens = new BigNumber("10").pow(6 + 18);
             ownerTokensBalance.should.be.bignumber.equal(expectedBountyTokens);
@@ -161,7 +170,7 @@ contract('Fundraiser', function (accounts) {
             await expectThrow(token.buyTokens({ value: 1, from: accounts[1] }));
         });
 
-        it('should allow to finalize the fundraiser if the hardcap is reached, but it is not the owner', async function () {
+        it('should not allow to finalize the fundraiser by a non-owner, even if the hardcap is reached', async function () {
             let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
             let result = await token.send(ethersHardCap);
             await expectThrow(token.finalize({ from: accounts[1] }));
@@ -171,6 +180,7 @@ contract('Fundraiser', function (accounts) {
     describe('funds receive during the fundraiser', function () {
         beforeEach(async function () {
             token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            await token.whitelistAddresses([accounts[0], accounts[1], accounts[2]]);
         });
 
         async function assert_funds(acc, value, logs) {
@@ -179,13 +189,13 @@ contract('Fundraiser', function (accounts) {
             let totalSupply = await token.totalSupply.call();
             assert.equal(totalSupply, initialConversionRate * value);
             assert.equal(logs.length, 2);
-            let fundsReceivedEvent = logs.find(e => e.event == 'FundsReceived');
+            let fundsReceivedEvent = logs.find(e => e.event === 'FundsReceived');
             assert.isOk(fundsReceivedEvent);
             fundsReceivedEvent.args._ethers.should.be.bignumber.equal(value);
             fundsReceivedEvent.args._tokens.should.be.bignumber.equal(value * initialConversionRate);
             fundsReceivedEvent.args._newTotalSupply.should.be.bignumber.equal(value * initialConversionRate);
             fundsReceivedEvent.args._conversionRate.should.be.bignumber.equal(initialConversionRate);
-            let transferEvent = logs.find(e => e.event == 'Transfer');
+            let transferEvent = logs.find(e => e.event === 'Transfer');
             assert.isOk(transferEvent);
             transferEvent.args._value.should.be.bignumber.equal(value * initialConversionRate);
         }
@@ -223,8 +233,9 @@ contract('Fundraiser', function (accounts) {
 
     describe('second before and after the end date fundraiser', function () {
         beforeEach(async function () {
-            updateTimestamps()
+            updateTimestamps();
             token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now + 5, hardCap);
+            await token.whitelistAddresses([accounts[0]]);
             updateTimestamps()
         });
 

@@ -9,7 +9,7 @@ import "./configs/FabricTokenConfig.sol";
  * @title Fabric Token
  *
  * @dev A standard token implementation of the ERC20 token standard with added
- *      HasOwener trait and initialized using the configuration constants.
+ *      HasOwner trait and initialized using the configuration constants.
  */
 contract FabricToken is ERC20Token, HasOwner, FabricTokenConfig {
     // The name of the token.
@@ -26,7 +26,7 @@ contract FabricToken is ERC20Token, HasOwner, FabricTokenConfig {
      *      `owner` address according to the initialization parameter.
      */
     function FabricToken(uint _totalSupply) public
-        HasOwner(msg.sender) 
+        HasOwner(msg.sender)
     {
         name = NAME;
         symbol = SYMBOL;

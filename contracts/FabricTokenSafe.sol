@@ -11,8 +11,6 @@ import "./traits/TokenSafe.sol";
  * @dev The Fabric Token safe containing all details about locked tokens.
  */
 contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
-    /// TODO: Change account addresses for core team and advisors.
-
     // Bundle type constants
     uint8 constant CORE_TEAM = 0;
     uint8 constant ADVISORS = 1;

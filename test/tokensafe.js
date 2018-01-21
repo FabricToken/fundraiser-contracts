@@ -4,6 +4,7 @@ import expectThrow from './helpers/expectThrow';
 import advanceBlock from './helpers/advanceBlock';
 import advanceTime from './helpers/advanceTime';
 import latestTimestamp from './helpers/latestTimestamp';
+
 const FabricToken = artifacts.require("./FabricToken.sol");
 const FabricTokenSafe = artifacts.require("./FabricTokenSafe.sol");
 const TokenSafeUT = artifacts.require("./testing/TokenSafeUT.sol");
@@ -26,14 +27,18 @@ contract('TokenSafe', function (accounts) {
     let token;
     let safe;
 
-    before(async function () {
-        //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
-        await advanceBlock()
+    function updateTimestamps() {
         now = latestTimestamp();
         oneDayBefore = now - 24 * 3600;
         oneDayAfter = now + 24 * 3600;
         twoDaysAfter = now + 24 * 3600;
-    })
+    }
+
+    before(async function () {
+        //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
+        await advanceBlock();
+        updateTimestamps();
+    });
 
     describe('unit testing the TokenSafe trait', function () {
         beforeEach(async function () {
@@ -137,6 +142,7 @@ contract('TokenSafe', function (accounts) {
 
 
         beforeEach(async function () {
+            updateTimestamps();
             token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now, hardCap);
             safe = FabricTokenSafe.at(await token.fabricTokenSafe.call());
             // Finalize fundraiser
@@ -144,13 +150,13 @@ contract('TokenSafe', function (accounts) {
             assert.isTrue(await token.finalized.call());
         });
 
-        it('should alllow the release of advisors\' locked tokens not before the release date', async function () {
+        it('should allow the release of advisors\' locked tokens, but not before the release date', async function () {
             let [, releaseDate] = await safe.bundles.call(ADVISORS);
             if (now > releaseDate.toNumber()) {
                 assert.fail(0, 0, 'The release date for the advisors has already passed');
             }
             // Before the release date
-            for (var [address,] of advisorsAccounts) {
+            for (let [address,] of advisorsAccounts) {
                 await expectThrow(safe.releaseAdvisorsAccount({ from: address }));
             }
 
@@ -158,7 +164,7 @@ contract('TokenSafe', function (accounts) {
             advanceTime(releaseDate - now + 100);
 
             // Release all advisors' locked accounts
-            for (var [address, amount] of advisorsAccounts) {
+            for (let [address, amount] of advisorsAccounts) {
                 await safe.releaseAdvisorsAccount({ from: address });
                 let accountBalance = await token.balanceOf.call(address);
                 accountBalance.should.be.bignumber.equal(amount);
@@ -168,13 +174,13 @@ contract('TokenSafe', function (accounts) {
             lockedTokens.should.be.bignumber.equal(0);
         });
 
-        it('should alllow the release of advisors\' locked tokens not before the release date', async function () {
+        it('should allow the release of core team locked tokens, but not before the release date', async function () {
             let [, releaseDate] = await safe.bundles.call(CORE_TEAM);
             if (now > releaseDate.toNumber()) {
                 assert.fail(0, 0, 'The release date for the core team has already passed');
             }
             // Before the release date
-            for (var [address,] of coreTeamAccounts) {
+            for (let [address,] of coreTeamAccounts) {
                 await expectThrow(safe.releaseCoreTeamAccount({ from: address }));
             }
 
@@ -182,7 +188,7 @@ contract('TokenSafe', function (accounts) {
             advanceTime(releaseDate - now + 100);
 
             // Release all core team locked accounts
-            for (var [address, amount] of coreTeamAccounts) {
+            for (let [address, amount] of coreTeamAccounts) {
                 await safe.releaseCoreTeamAccount({ from: address });
                 let accountBalance = await token.balanceOf.call(address);
                 accountBalance.should.be.bignumber.equal(amount);

@@ -3,13 +3,14 @@ pragma solidity ^0.4.18;
 import './configs/FabricTokenFundraiserConfig.sol';
 import './FabricToken.sol';
 import './FabricTokenSafe.sol';
+import './traits/Whitelist.sol';
 
 /**
  * @title FabricTokenFundraiser
  *
  * @dev The Fabric Token fundraiser contract.
  */
-contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
+contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whitelist {
     // Indicates whether the fundraiser has ended or not.
     bool public finalized = false;
 
@@ -72,6 +73,7 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
      */
     function FabricTokenFundraiser(address _beneficiary) public
         FabricToken(0)
+        Whitelist(msg.sender)
     {
         require(_beneficiary != 0);
 
@@ -121,14 +123,14 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
     /**
      * @dev Creates new tokens based on the number of ethers sent and the conversion rate.
      */
-    function buyTokens() public payable {
+    function buyTokens() public payable onlyWhitelisted {
         require(!finalized);
         require(now >= startDate);
         require(now <= endDate);
         require(msg.value > 0);
         require(totalSupply <= hardCap);
 
-	/// Set the address of the buyer to the msg.sender
+        /// Set the address of the buyer to the msg.sender
         address buyer = msg.sender;
 
         /// Calculate the number of tokens the buyer will receive.
@@ -152,7 +154,7 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig {
      * @dev Finalize the fundraiser if `endDate` has passed or if `hardCap` is reached.
      */
     function finalize() public onlyOwner {
-        require((totalSupply >= hardCap) || (now > endDate));
+        require((totalSupply >= hardCap) || (now >= endDate));
         require(!finalized);
 
         Finalized(beneficiary, this.balance, totalSupply);

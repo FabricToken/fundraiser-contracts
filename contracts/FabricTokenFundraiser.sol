@@ -14,6 +14,9 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
     // Indicates whether the fundraiser has ended or not.
     bool public finalized = false;
 
+    // Indicates whether the tokens are claimed by the partners
+    bool private partnerTokensClaimed = false;
+
     // The address of the account which will receive the funds gathered by the fundraiser.
     address public beneficiary;
 
@@ -151,6 +154,24 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
             totalSupply, 
             conversionRate
         );
+    }
+
+    /**
+     * @dev Distributes the tokens allocated for the strategic partners.
+     */
+    function claimPartnerTokens() public {
+        require(!partnerTokensClaimed);
+        require(now >= startDate);
+
+        partnerTokensClaimed = true;
+
+        address partner1 = 0xA6556B9BD0AAbf0d8824374A3C425d315b09b832;
+        balances[partner1] = balances[partner1].plus(125 * (10**4) * DECIMALS_FACTOR);
+
+        address partner2 = 0x783A1cBc37a8ef2F368908490b72BfE801DA1877;
+        balances[partner2] = balances[partner2].plus(750 * (10**4) * DECIMALS_FACTOR);
+
+        totalSupply = totalSupply.plus(875 * (10**4) * DECIMALS_FACTOR);
     }
 
     /**

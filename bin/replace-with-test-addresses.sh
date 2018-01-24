@@ -14,6 +14,9 @@ SEARCH_REPLACE_LIST=$(cat <<SETVAR
 0x2F54c78e0caa5240ed38fa7a5623Db47c2076F76  0xCc036143C68A7A9a41558Eae739B428eCDe5EF66
 0xb6EA6193058F3c8A4A413d176891d173D62E00bE  0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42
 0x8b3E184Cf5C3bFDaB1C4D0F30713D30314FcfF7c  0x5D82c01e0476a0cE11C56b1711FeFf2d80CbB8B6
+
+0xA6556B9BD0AAbf0d8824374A3C425d315b09b832  0x87c490ad2bE5447A61bdED4fac06fC3a2A7542b8
+0x783A1cBc37a8ef2F368908490b72BfE801DA1877  0xeAD3fC31668c1Ea45efEc3De609DEC1ded72cF79
 SETVAR
 )
 
@@ -25,8 +28,10 @@ do
 
     if [ -z "${OSTYPE##*darwin*}" ]; then
         sed -i '' "s/$search/$replace/" "${CONTRACTS_DIR}/FabricTokenSafe.sol";
+        sed -i '' "s/$search/$replace/" "${CONTRACTS_DIR}/FabricTokenFundraiser.sol";
     else
         sed -i "s/$search/$replace/" "${CONTRACTS_DIR}/FabricTokenSafe.sol";
+        sed -i "s/$search/$replace/" "${CONTRACTS_DIR}/FabricTokenFundraiser.sol";
     fi
 done <<< "$SEARCH_REPLACE_LIST"
 

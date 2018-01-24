@@ -16,6 +16,8 @@ const should = require('chai')
     .should()
 
 contract('Fundraiser', function (accounts) {
+    const decimalsFactor = new BigNumber(10).pow(18);
+    const millionFactor = new BigNumber(10).pow(6);
     const initialConversionRate = 3000;
     const hardCap = 10 ** 5;
     let token;
@@ -109,6 +111,10 @@ contract('Fundraiser', function (accounts) {
         it('should not allow to finalize the fundraiser', async function () {
             await expectThrow(token.finalize());
         });
+
+        it('should not allow strategic partners to claim their tokens before the fundraiser begins', async function () {
+            await expectThrow(token.claimPartnerTokens());
+        });
     });
 
     describe('during the fundraiser', function () {
@@ -190,6 +196,26 @@ contract('Fundraiser', function (accounts) {
             assert.isOk(await token.finalized.call());
             let result = await token.transfer(accounts[1], 1);
             assert.isOk(result);
+        });
+
+        it('should allow strategic partners to claim their tokens', async function () {
+            let initialTotalSupply = await token.totalSupply.call();
+
+            await token.claimPartnerTokens();
+
+            let balancePartner1 = await token.balanceOf.call("0x87c490ad2bE5447A61bdED4fac06fC3a2A7542b8");
+            balancePartner1.should.be.bignumber.equal(new BigNumber("1.25").mul(millionFactor).mul(decimalsFactor));
+
+            let balancePartner2 = await token.balanceOf.call("0xeAD3fC31668c1Ea45efEc3De609DEC1ded72cF79");
+            balancePartner2.should.be.bignumber.equal(new BigNumber("7.5").mul(millionFactor).mul(decimalsFactor));
+
+            let newTotalSupply = await token.totalSupply.call();
+            newTotalSupply.should.be.bignumber.equal(initialTotalSupply.plus(new BigNumber("8.75").mul(millionFactor).mul(decimalsFactor)));
+        });
+
+        it('should not allow strategic partners to claim their tokens twice', async function () {
+            await token.claimPartnerTokens();
+            await expectThrow(token.claimPartnerTokens());
         });
     });
 
@@ -283,8 +309,6 @@ contract('Fundraiser', function (accounts) {
             ADVISORS = 1;
         const initialConversionRate = 3000;
         const hardCap = 10 ** 5;
-        const decimalsFactor = new BigNumber(10).pow(18);
-        const millionFactor = new BigNumber(10).pow(6);
         const totalSupply = new BigNumber(19).mul(millionFactor).mul(decimalsFactor);
 
         let coreTeamAccounts = [

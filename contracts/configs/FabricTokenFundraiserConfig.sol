@@ -10,10 +10,10 @@ import './FabricTokenConfig.sol';
  */
 contract FabricTokenFundraiserConfig is FabricTokenConfig {
     // The number of FT per 1 ETH.
-    uint constant CONVERSION_RATE = 2679;
+    uint constant CONVERSION_RATE = 9000;
 
     // The hard cap of the fundraiser.
-    uint constant TOKENS_HARD_CAP = 80 * (10**6) * DECIMALS_FACTOR;
+    uint constant TOKENS_HARD_CAP = 71250 * (10**3) * DECIMALS_FACTOR;
 
     // The start date of the fundraiser: Thursday, 2018-02-15 10:00:00 UTC.
     uint constant START_DATE = 1518688800;

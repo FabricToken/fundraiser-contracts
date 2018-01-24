@@ -84,6 +84,9 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
         hardCap = TOKENS_HARD_CAP;
 
         fabricTokenSafe = new FabricTokenSafe(this);
+
+        // Freeze the transfers for the duration of the fundraiser.
+        freeze();
     }
 
     /**
@@ -173,5 +176,8 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
 
         /// Finalize the fundraiser. Keep in mind that this cannot be undone.
         finalized = true;
+
+        // Unfreeze transfers
+        unfreeze();
     }
 }

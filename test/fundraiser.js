@@ -6,6 +6,7 @@ import advanceTime from './helpers/advanceTime';
 import latestTimestamp from './helpers/latestTimestamp';
 const Fundraiser = artifacts.require("./FabricTokenFundraiser.sol");
 const FundraiserUT = artifacts.require("./testing/FundraiserUT.sol");
+const FabricTokenSafe = artifacts.require("./FabricTokenSafe.sol");
 
 const BigNumber = web3.BigNumber
 
@@ -32,7 +33,7 @@ contract('Fundraiser', function (accounts) {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
         await advanceBlock()
         updateTimestamps();
-    })
+    });
 
     describe('contract construction', function () {
         it('should throw an error if no beneficiary is set', async function () {
@@ -175,6 +176,21 @@ contract('Fundraiser', function (accounts) {
             let result = await token.send(ethersHardCap);
             await expectThrow(token.finalize({ from: accounts[1] }));
         });
+
+        it('should not allow to transfer tokens, since it is frozen', async function () {
+            let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
+            await token.send(ethersHardCap);
+            await expectThrow(token.transfer(accounts[1], 1));
+        });
+
+        it('should not allow to transfer tokens, since it is frozen', async function () {
+            let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
+            await token.send(ethersHardCap);
+            await token.finalize();
+            assert.isOk(await token.finalized.call());
+            let result = await token.transfer(accounts[1], 1);
+            assert.isOk(result);
+        });
     });
 
     describe('funds receive during the fundraiser', function () {
@@ -255,6 +271,93 @@ contract('Fundraiser', function (accounts) {
             advanceTime(20); // now + 20
             await token.finalize();
             assert.isOk(await token.finalized.call());
+        });
+    });
+
+    // KLUDGE: This test requires to be after the fundraiser tests since it manipulates time.
+    //         However experience shows that truffle cannot guarantee consistent order of execution
+    //         of the tests suites.
+    describe('integration testing the FabricTokenSafe using FundraiserUT', function () {
+        let safe;
+        const CORE_TEAM = 0,
+            ADVISORS = 1;
+        const initialConversionRate = 3000;
+        const hardCap = 10 ** 5;
+        const decimalsFactor = new BigNumber(10).pow(18);
+        const millionFactor = new BigNumber(10).pow(6);
+        const totalSupply = new BigNumber(19).mul(millionFactor).mul(decimalsFactor);
+
+        let coreTeamAccounts = [
+            ["0x9E1Ef1eC212F5DFfB41d35d9E5c14054F26c6560", new BigNumber(4).mul(millionFactor).mul(decimalsFactor)],
+            ["0xce42bdB34189a93c55De250E011c68FaeE374Dd3", new BigNumber(4).mul(millionFactor).mul(decimalsFactor)],
+            ["0x97A3FC5Ee46852C1Cf92A97B7BaD42F2622267cC", new BigNumber(4).mul(millionFactor).mul(decimalsFactor)],
+        ];
+
+        let advisorsAccounts = [
+            ["0xB9dcBf8A52Edc0C8DD9983fCc1d97b1F5d975Ed7", new BigNumber(2).mul(millionFactor).mul(decimalsFactor)],
+            ["0x26064a2E2b568D9A6D01B93D039D1da9Cf2A58CD", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+            ["0xe84Da28128a48Dd5585d1aBB1ba67276FdD70776", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+            ["0xCc036143C68A7A9a41558Eae739B428eCDe5EF66", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+            ["0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+            ["0x5D82c01e0476a0cE11C56b1711FeFf2d80CbB8B6", new BigNumber(1).mul(millionFactor).mul(decimalsFactor)],
+        ];
+
+
+        beforeEach(async function () {
+            updateTimestamps();
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now, hardCap);
+            safe = FabricTokenSafe.at(await token.fabricTokenSafe.call());
+            // Finalize fundraiser
+            await token.finalize();
+            assert.isTrue(await token.finalized.call());
+        });
+
+        it('should allow the release of advisors\' locked tokens, but not before the release date', async function () {
+            let [, releaseDate] = await safe.bundles.call(ADVISORS);
+            if (now > releaseDate.toNumber()) {
+                assert.fail(0, 0, 'The release date for the advisors has already passed');
+            }
+            // Before the release date
+            for (let [address,] of advisorsAccounts) {
+                await expectThrow(safe.releaseAdvisorsAccount({ from: address }));
+            }
+
+            // Move after the release date
+            advanceTime(releaseDate - now + 100);
+
+            // Release all advisors' locked accounts
+            for (let [address, amount] of advisorsAccounts) {
+                await safe.releaseAdvisorsAccount({ from: address });
+                let accountBalance = await token.balanceOf.call(address);
+                accountBalance.should.be.bignumber.equal(amount);
+            }
+
+            let [lockedTokens,] = await safe.bundles.call(ADVISORS);
+            lockedTokens.should.be.bignumber.equal(0);
+        });
+
+        it('should allow the release of core team locked tokens, but not before the release date', async function () {
+            let [, releaseDate] = await safe.bundles.call(CORE_TEAM);
+            if (now > releaseDate.toNumber()) {
+                assert.fail(0, 0, 'The release date for the core team has already passed');
+            }
+            // Before the release date
+            for (let [address,] of coreTeamAccounts) {
+                await expectThrow(safe.releaseCoreTeamAccount({ from: address }));
+            }
+
+            // Move after the release date
+            advanceTime(releaseDate - now + 100);
+
+            // Release all core team locked accounts
+            for (let [address, amount] of coreTeamAccounts) {
+                await safe.releaseCoreTeamAccount({ from: address });
+                let accountBalance = await token.balanceOf.call(address);
+                accountBalance.should.be.bignumber.equal(amount);
+            }
+
+            let [lockedTokens,] = await safe.bundles.call(CORE_TEAM);
+            lockedTokens.should.be.bignumber.equal(0);
         });
     });
 });

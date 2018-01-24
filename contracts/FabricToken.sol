@@ -1,6 +1,6 @@
 pragma solidity ^0.4.18;
 
-import "./traits/ERC20Token.sol";
+import "./traits/FreezableERC20Token.sol";
 import "./traits/HasOwner.sol";
 import "./configs/FabricTokenConfig.sol";
 
@@ -11,7 +11,7 @@ import "./configs/FabricTokenConfig.sol";
  * @dev A standard token implementation of the ERC20 token standard with added
  *      HasOwner trait and initialized using the configuration constants.
  */
-contract FabricToken is ERC20Token, HasOwner, FabricTokenConfig {
+contract FabricToken is FabricTokenConfig, HasOwner, FreezableERC20Token {
     // The name of the token.
     string public name;
 

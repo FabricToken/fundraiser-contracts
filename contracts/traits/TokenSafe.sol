@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "../libraries/SafeMath.sol";
 import "../interfaces/ERC20TokenInterface.sol";
@@ -71,7 +71,7 @@ contract TokenSafe {
         require(now >= bundle.releaseDate);
         uint tokens = bundle.balances[_account];
         require(tokens > 0);
-        bundle.balances[msg.sender] = 0;
+        bundle.balances[_account] = 0;
         bundle.lockedTokens = bundle.lockedTokens.minus(tokens);
         if (!token.transfer(_account, tokens)) {
             revert();

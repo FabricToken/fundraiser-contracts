@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import './configs/FabricTokenFundraiserConfig.sol';
 import './FabricToken.sol';
@@ -13,9 +13,6 @@ import './traits/Whitelist.sol';
 contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whitelist {
     // Indicates whether the fundraiser has ended or not.
     bool public finalized = false;
-
-    // Indicates whether the tokens are claimed by the partners
-    bool private partnerTokensClaimed = false;
 
     // The address of the account which will receive the funds gathered by the fundraiser.
     address public beneficiary;
@@ -34,6 +31,18 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
 
     // The `FabricTokenSafe` contract.
     FabricTokenSafe public fabricTokenSafe;
+
+    // The minimum amount of ether allowed in the public sale
+    uint internal minimumContribution;
+
+    // The maximum amount of ether allowed per address
+    uint internal individualLimit;
+
+    // Number of tokens sold during the fundraiser.
+    uint private tokensSold;
+
+    // Indicates whether the tokens are claimed by the partners
+    bool private partnerTokensClaimed = false;
 
     /**
      * @dev The event fires every time a new buyer enters the fundraiser.
@@ -85,6 +94,9 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
         startDate = START_DATE;
         endDate = END_DATE;
         hardCap = TOKENS_HARD_CAP;
+        tokensSold = 0;
+        minimumContribution = MIN_CONTRIBUTION;
+        individualLimit = INDIVIDUAL_ETHER_LIMIT * CONVERSION_RATE;
 
         fabricTokenSafe = new FabricTokenSafe(this);
 
@@ -115,6 +127,7 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
         require(_conversionRate > 0);
 
         conversionRate = _conversionRate;
+        individualLimit = INDIVIDUAL_ETHER_LIMIT * _conversionRate;
 
         ConversionRateChange(_conversionRate);
     }
@@ -133,22 +146,24 @@ contract FabricTokenFundraiser is FabricToken, FabricTokenFundraiserConfig, Whit
         require(!finalized);
         require(now >= startDate);
         require(now <= endDate);
-        require(msg.value > 0);
-        require(totalSupply <= hardCap);
+        require(tx.gasprice <= MAX_GAS_PRICE);  // gas price limit
+        require(msg.value >= minimumContribution);  // required minimum contribution
+        require(tokensSold <= hardCap);
 
-        /// Set the address of the buyer to the msg.sender
-        address buyer = msg.sender;
-
-        /// Calculate the number of tokens the buyer will receive.
+        // Calculate the number of tokens the buyer will receive.
         uint tokens = msg.value.mul(conversionRate);
+        balances[msg.sender] = balances[msg.sender].plus(tokens);
 
-        balances[buyer] = balances[buyer].plus(tokens);
+        // Ensure that the individual contribution limit has not been reached
+        require(balances[msg.sender] <= individualLimit);
+
+        tokensSold = tokensSold.plus(tokens);
         totalSupply = totalSupply.plus(tokens);
 
-        Transfer(0x0, buyer, tokens);
+        Transfer(0x0, msg.sender, tokens);
 
         FundsReceived(
-            buyer, 
+            msg.sender,
             msg.value, 
             tokens, 
             totalSupply, 

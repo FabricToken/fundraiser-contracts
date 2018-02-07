@@ -6,38 +6,38 @@ contract('FabricToken [General]', function (accounts) {
   let token;
 
   it("should have all parameters set correctly", async function () {
-    token = await FabricToken.new();
+    token = await FabricToken.new(0);
 
-    var name = await token.name.call();
+    let name = await token.name.call();
     assert.equal(name, 'Fabric Token', "incorrect name");
 
-    var symbol = await token.symbol.call();
+    let symbol = await token.symbol.call();
     assert.equal(symbol, 'FT', "incorrect symbol");
 
-    var decimals = await token.decimals.call();
+    let decimals = await token.decimals.call();
     assert.equal(decimals, 18, "decimals should match ETH decimals (wei)");
   });
 
   it("should have 10000 Fabric Tokens in the first account in the deployed contract", async function () {
     token = await FabricToken.deployed();
 
-    var balance = await token.balanceOf.call(accounts[0]);
+    let balance = await token.balanceOf.call(accounts[0]);
     assert.equal(balance, 10000, "10000 wasn't in the first account");
 
-    var totalSupply = await token.totalSupply.call();
+    let totalSupply = await token.totalSupply.call();
     assert.equal(totalSupply, 10000, "total supply should equal the owner account balance 10000 ");
   });
 
   it("should put 10000 FabricToken in owner account when new contract is created", async function () {
     token = await FabricToken.new(10000);
 
-    var owner = await token.owner.call();
+    let owner = await token.owner.call();
     assert.equal(owner, accounts[0], "owner should be the first account");
 
-    var balance = await token.balanceOf.call(owner);
+    let balance = await token.balanceOf.call(owner);
     assert.equal(balance, 10000, "10000 should be in the owner's account");
 
-    var totalSupply = await token.totalSupply.call();
+    let totalSupply = await token.totalSupply.call();
     assert.equal(totalSupply, 10000, "total supply should equal the owner account balance 10000 ");
   });
 

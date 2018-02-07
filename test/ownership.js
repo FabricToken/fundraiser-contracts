@@ -7,7 +7,7 @@ contract('FabricToken [HasOwner()]', function (accounts) {
     let token;
 
     beforeEach(async function () {
-        token = await FabricToken.new();
+        token = await FabricToken.new(0);
     });
 
     it("should have an owner", async function () {

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "./configs/FabricTokenFundraiserConfig.sol";
 import "./libraries/SafeMath.sol";
@@ -31,7 +31,7 @@ contract FabricTokenSafe is TokenSafe, FabricTokenFundraiserConfig {
         );
 
         // Accounts with tokens locked for the FT core team.
-        addLockedAccount(CORE_TEAM, 0x15c53A798C795265C8A5e84579FDd13E668Ce5E6, 4 * (10**6) * DECIMALS_FACTOR);
+        addLockedAccount(CORE_TEAM, 0xB494096548aA049C066289A083204E923cBf4413, 4 * (10**6) * DECIMALS_FACTOR);
         addLockedAccount(CORE_TEAM, 0xE3506B01Bee377829ee3CffD8bae650e990c5d68, 4 * (10**6) * DECIMALS_FACTOR);
         addLockedAccount(CORE_TEAM, 0x9071085064aE42973E1D4232baB7437952Ce1fF1, 4 * (10**6) * DECIMALS_FACTOR);
 

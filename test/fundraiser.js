@@ -4,22 +4,25 @@ import expectThrow from './helpers/expectThrow';
 import advanceBlock from './helpers/advanceBlock';
 import advanceTime from './helpers/advanceTime';
 import latestTimestamp from './helpers/latestTimestamp';
+
 const Fundraiser = artifacts.require("./FabricTokenFundraiser.sol");
 const FundraiserUT = artifacts.require("./testing/FundraiserUT.sol");
 const FabricTokenSafe = artifacts.require("./FabricTokenSafe.sol");
 
-const BigNumber = web3.BigNumber
+const BigNumber = web3.BigNumber;
 
 const should = require('chai')
     .use(require('chai-as-promised'))
     .use(require('chai-bignumber')(BigNumber))
-    .should()
+    .should();
 
 contract('Fundraiser', function (accounts) {
     const decimalsFactor = new BigNumber(10).pow(18);
     const millionFactor = new BigNumber(10).pow(6);
     const initialConversionRate = 3000;
-    const hardCap = 10 ** 5;
+    const hardCap = new BigNumber(web3.toWei(1, 'kwei')).mul(initialConversionRate);
+    const minimumContribution = new BigNumber(web3.toWei(1, 'wei'));
+    const individualLimit = new BigNumber(web3.toWei(100, 'ether'));
     let token;
     let now;
     let oneDayBefore, oneDayAfter, twoDaysAfter;
@@ -33,17 +36,35 @@ contract('Fundraiser', function (accounts) {
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
-        await advanceBlock()
+        await advanceBlock();
         updateTimestamps();
     });
 
     describe('contract construction', function () {
-        it('should throw an error if no beneficiary is set', async function () {
+        it('should throw an error on invalid arguments', async function () {
             await expectThrow(Fundraiser.new(0));
         });
 
         it('should throw an error if no beneficiary is set', async function () {
-            await expectThrow(FundraiserUT.new(0, initialConversionRate, oneDayBefore, oneDayAfter, hardCap));
+            await expectThrow(FundraiserUT.new(0, initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit));
+        });
+
+        it('should have all parameters set as expected', async function () {
+            token = await FundraiserUT.new(accounts[1], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit);
+            let beneficiary = await token.beneficiary.call();
+            beneficiary.should.be.equal(accounts[1]);
+            let conversionRate = await token.conversionRate.call();
+            conversionRate.should.be.bignumber.equal(initialConversionRate);
+            let startDate = await token.startDate.call();
+            startDate.should.be.bignumber.equal(oneDayBefore);
+            let endDate = await token.endDate.call();
+            endDate.should.be.bignumber.equal(oneDayAfter);
+            let tokenHardCap = await token.hardCap.call();
+            tokenHardCap.should.be.bignumber.equal(hardCap);
+            let internalMinimumContribution = await token.internalMinimumContribution.call();
+            internalMinimumContribution.should.be.bignumber.equal(minimumContribution);
+            let internalIndividualLimit = await token.internalIndividualLimit.call();
+            internalIndividualLimit.should.be.bignumber.equal(individualLimit.mul(initialConversionRate));
         });
     });
 
@@ -54,7 +75,7 @@ contract('Fundraiser', function (accounts) {
 
         it('should return the proper beneficiary when created', async function () {
             let beneficiary = await token.beneficiary.call();
-            assert.equal(beneficiary, accounts[0], 'should be the one set druring creation');
+            assert.equal(beneficiary, accounts[0], 'should be the one set during creation');
         });
 
         it('should not allow to set zero address beneficiary', async function () {
@@ -74,7 +95,7 @@ contract('Fundraiser', function (accounts) {
 
     describe('before the fundraiser begin', function () {
         beforeEach(async function () {
-            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayAfter, twoDaysAfter, hardCap);
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayAfter, twoDaysAfter, hardCap, minimumContribution, individualLimit);
         });
 
         it('should allow to change conversion rate by the owner', async function () {
@@ -83,7 +104,9 @@ contract('Fundraiser', function (accounts) {
             assert.equal(result.logs[0].event, 'ConversionRateChange');
             assert.equal(result.logs[0].args._conversionRate, 1000);
             let conversionRate = await token.conversionRate.call();
-            assert.equal(conversionRate, 1000)
+            conversionRate.should.be.bignumber.equal(1000);
+            let internalIndividualLimit = await token.internalIndividualLimit.call();
+            internalIndividualLimit.should.be.bignumber.equal(individualLimit.mul(1000));
         });
 
         it('should allow to whitelist entries', async function () {
@@ -119,7 +142,7 @@ contract('Fundraiser', function (accounts) {
 
     describe('during the fundraiser', function () {
         beforeEach(async function () {
-            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit);
             await token.whitelistAddresses([accounts[0], accounts[1], accounts[2]]);
         });
 
@@ -144,7 +167,7 @@ contract('Fundraiser', function (accounts) {
         });
 
         it('should transfer the correct amount of ether to the beneficiary', async function () {
-            token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit);
             await token.whitelistAddresses([accounts[1]]);
 
             let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
@@ -156,7 +179,7 @@ contract('Fundraiser', function (accounts) {
         });
 
         it('should transfer the correct amount of tokens for the bounty program to the owner', async function () {
-            token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            token = await FundraiserUT.new(accounts[9], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit);
             await token.whitelistAddresses([accounts[1]]);
 
             let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
@@ -169,7 +192,7 @@ contract('Fundraiser', function (accounts) {
         });
 
         it('should not allow any transfers after the hardcap is reached', async function () {
-            let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
+            let ethersHardCap = Math.ceil(hardCap / initialConversionRate) + 1;
             let result = await token.send(ethersHardCap);
             await expectThrow(token.send(1));
             await expectThrow(token.sendTransaction({ value: 1, from: accounts[1] }));
@@ -221,11 +244,11 @@ contract('Fundraiser', function (accounts) {
 
     describe('funds receive during the fundraiser', function () {
         beforeEach(async function () {
-            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap);
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, minimumContribution, individualLimit);
             await token.whitelistAddresses([accounts[0], accounts[1], accounts[2]]);
         });
 
-        async function assert_funds(acc, value, logs) {
+        let assertFunds = async function(acc, value, logs) {
             let balance = await token.balanceOf.call(acc);
             assert.equal(balance, initialConversionRate * value);
             let totalSupply = await token.totalSupply.call();
@@ -240,30 +263,30 @@ contract('Fundraiser', function (accounts) {
             let transferEvent = logs.find(e => e.event === 'Transfer');
             assert.isOk(transferEvent);
             transferEvent.args._value.should.be.bignumber.equal(value * initialConversionRate);
-        }
+        };
 
         it('should allow to create tokens by sending ether to contract', async function () {
             let result = await token.send(10);
             let balance = await token.balanceOf.call(accounts[0]);
-            await assert_funds(accounts[0], 10, result.logs);
+            await assertFunds(accounts[0], 10, result.logs);
         });
 
         it('should allow to create tokens by sending ether to #buyTokens()', async function () {
             let result = await token.buyTokens({ value: 10 });
             let balance = await token.balanceOf.call(accounts[0]);
-            await assert_funds(accounts[0], 10, result.logs);
+            await assertFunds(accounts[0], 10, result.logs);
         });
 
         it('should allow anyone to buy tokens as anyone else using #buyTokens()', async function () {
             let result = await token.buyTokens({ value: 2, from: accounts[2] });
             let balance = await token.balanceOf.call(accounts[2]);
-            await assert_funds(accounts[2], 2, result.logs);
+            await assertFunds(accounts[2], 2, result.logs);
         });
 
         it('should allow anyone to buy tokens by sending ether to contract', async function () {
             let buyer = accounts[1]; // different than the owner
             let result = await token.sendTransaction({ value: 3, from: buyer });
-            await assert_funds(buyer, 3, result.logs);
+            await assertFunds(buyer, 3, result.logs);
         });
 
         it('should not allow zero ether transactions', async function () {
@@ -271,12 +294,58 @@ contract('Fundraiser', function (accounts) {
             await expectThrow(token.sendTransaction({ value: 0, from: accounts[1] }));
             await expectThrow(token.buyTokens({ value: 0, from: accounts[0] }));
         });
+
+        it('should allow to buy tokens using limited gas price', async function () {
+            let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
+            await token.sendTransaction({
+                from: accounts[0],
+                value: ethersHardCap,
+                gasPrice: new BigNumber(10).pow(9).mul(40) // 40 gwei
+            });
+        });
+
+        it('should not allow to buy tokens using higher gas price', async function () {
+            let ethersHardCap = Math.ceil(hardCap / initialConversionRate);
+            await expectThrow(token.sendTransaction({
+                from: accounts[0],
+                value: ethersHardCap,
+                gasPrice: new BigNumber(10).pow(9).mul(60) // 60 gwei
+            }));
+        });
+
+        it('should allow to buy tokens with higher or equal than the minimal contribution', async function () {
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, web3.toWei("0.1", "kwei"), individualLimit);
+            await token.whitelistAddresses([accounts[0]]);
+            await expectThrow(token.send(web3.toWei("0.01", "kwei")));
+            await token.send(web3.toWei("0.1", "kwei"));
+            await token.send(web3.toWei("0.2", "kwei"));
+        });
+
+        it('should not allow to buy tokens with lower than the minimal contribution', async function () {
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, web3.toWei("0.1", "ether"), individualLimit);
+            await token.whitelistAddresses([accounts[0]]);
+            await expectThrow(token.send(web3.toWei("0.01", "ether")));
+        });
+
+        it('should allow to buy tokens up to a limit', async function () {
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, web3.toWei("1", "wei"), web3.toWei("1", "kwei"));
+            await token.whitelistAddresses([accounts[0]]);
+            await token.send(web3.toWei("0.5", "kwei"));
+            await token.send(web3.toWei("0.5", "kwei"));
+            await expectThrow(token.send(web3.toWei("1", "wei")));
+        });
+
+        it('should allow to buy more tokens than the limit', async function () {
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, oneDayAfter, hardCap, web3.toWei("1", "wei"), web3.toWei("1", "kwei"));
+            await token.whitelistAddresses([accounts[0]]);
+            await expectThrow(token.send(web3.toWei("1001", "wei")));
+        });
     });
 
     describe('second before and after the end date fundraiser', function () {
         beforeEach(async function () {
             updateTimestamps();
-            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now + 5, hardCap);
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now + 5, hardCap, minimumContribution, individualLimit);
             await token.whitelistAddresses([accounts[0]]);
             updateTimestamps()
         });
@@ -300,9 +369,8 @@ contract('Fundraiser', function (accounts) {
         });
     });
 
-    // KLUDGE: This test requires to be after the fundraiser tests since it manipulates time.
-    //         However experience shows that truffle cannot guarantee consistent order of execution
-    //         of the tests suites.
+    // KLUDGE: This test is placed after the fundraiser tests since it manipulates time and experience shows that
+    //         truffle cannot guarantee consistent order of execution of the tests suites based on test filename.
     describe('integration testing the FabricTokenSafe using FundraiserUT', function () {
         let safe;
         const CORE_TEAM = 0,
@@ -329,7 +397,7 @@ contract('Fundraiser', function (accounts) {
 
         beforeEach(async function () {
             updateTimestamps();
-            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now, hardCap);
+            token = await FundraiserUT.new(accounts[0], initialConversionRate, oneDayBefore, now, hardCap, minimumContribution, individualLimit);
             safe = FabricTokenSafe.at(await token.fabricTokenSafe.call());
             // Finalize fundraiser
             await token.finalize();

@@ -4198,6 +4198,16 @@ solc@0.4.18, solc@^0.4.2:
     semver "^5.3.0"
     yargs "^4.7.1"
 
+solc@0.4.19:
+  version "0.4.19"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.19.tgz#1af1c4c292a0365a6977d4cbe3fbee7139b4b561"
+  dependencies:
+    fs-extra "^0.30.0"
+    memorystream "^0.3.1"
+    require-from-string "^1.1.0"
+    semver "^5.3.0"
+    yargs "^4.7.1"
+
 solidity-coverage@^0.2.1:
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.2.7.tgz#f7a11be723fdc24166e6e6fb2e26802fc9089088"
@@ -4616,13 +4626,13 @@ trim@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/trim/-/trim-0.0.1.tgz#5858547f6b290757ee95cccc666fb50084c460dd"
 
-truffle@^4.0.1:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-4.0.5.tgz#1462635cd6dbb9746a1b49a2d3e6b9a7f9226b58"
+truffle@^4.0.6:
+  version "4.0.6"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-4.0.6.tgz#04a23b4c75336f325804d262317f901dbab4f729"
   dependencies:
     mocha "^3.4.2"
     original-require "^1.0.1"
-    solc "0.4.18"
+    solc "0.4.19"
 
 tty-browserify@0.0.0:
   version "0.0.0"

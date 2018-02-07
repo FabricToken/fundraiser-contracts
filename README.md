@@ -13,8 +13,7 @@ Run `yarn test`
 
 ## Results
 
-* [Test results](https://travis-ci.org/FabricToken/fundraiser-contracts/builds/310931052#L527) [2017-12-03 18:00 UTC]
-* [Test coverage](https://travis-ci.org/FabricToken/fundraiser-contracts/builds/310931052#L779) [2017-12-03 18:00 UTC]
+* [Test results and test coverage](https://travis-ci.org/FabricToken/fundraiser-contracts)
 
 # Deployment Checklist
 

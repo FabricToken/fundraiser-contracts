@@ -5,7 +5,7 @@ Fabric Token Launch Ethereum smart contracts.
 
 ## Mainnet address:
 
-Will be announced 2 days before FT launch.
+[0x78a73B6CBc5D183CE56e786f6e905CaDEC63547B](https://etherscan.io/token/0x78a73B6CBc5D183CE56e786f6e905CaDEC63547B)
 
 # Testing
 
